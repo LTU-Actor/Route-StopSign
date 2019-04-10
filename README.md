@@ -1,5 +1,7 @@
 # Sign Detection
 
+![](img/example.png)
+
 Detects if there is a stop sign in front of the car.
 
   - Publish:
