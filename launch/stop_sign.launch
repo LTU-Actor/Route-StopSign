@@ -1,0 +1,11 @@
+<launch>
+
+    <include file="$(find simple_camera_publisher)/launch/example.launch" />
+
+    <node name="stop_sign_detection" pkg="sign_detection" type="stop_sign_detection">
+        <param name="camera_topic" type="string" value="/my_camera/cam_pub/image_raw" />
+        <param name="cascade_path" type="string" value="$(find sign_detection)/classifiers/stop_sign.xml" />
+
+    </node>
+
+</launch>
