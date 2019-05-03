@@ -19,17 +19,16 @@
 #include <sstream>
 #include <vector>
 
-static void die(const std::string& why)
-{
-    ROS_ERROR_STREAM("[FATAL] Sign detection: " << why);
-    exit(0);
-}
-
 class SignDetection
 {
 
 public:
     SignDetection();
+
+    bool hasSub();
+    bool isEnabled();
+    void startup();
+    void shutdown();
 
 private:
     // Callbacks
@@ -59,40 +58,46 @@ private:
     static constexpr int consecutive_frames_trigger_ = 2;
 
     cv::CascadeClassifier cascade_;
+
+    bool enabled_ = false;
+
+    std::string cam_topic;
+    std::string cascade_path;
 };
 
 SignDetection::SignDetection() : nh_("~"), it_(nh_)
 {
-    // Subscribe to camera
-    std::string cam_topic;
-    if (nh_.getParam("camera_topic", cam_topic))
-    {
-        ROS_INFO_STREAM("Sign Detection: using video source " << cam_topic << "...");
-    }
-    else
-    {
-        die("param 'camera_topic' not defined");
-    }
-
-    std::string cascade_path;
-    if (nh_.getParam("cascade_path", cascade_path))
-    {
-        //Load the cascades
-        if (!cascade_.load(cascade_path)) {
-            die(std::string("Error loading cascade_ ") + cascade_path);
-        }
-    }
-    else
-    {
-        die("param 'cascade_path' not defined");
-    }
-
-
-    image_sub_ = it_.subscribe(cam_topic, 1, &SignDetection::imageCb, this);
-
     // Dynamic reconfigure
     server_.setCallback(boost::bind(&SignDetection::configCB, this, _1, _2));
     server_.getConfigDefault(config_);
+
+    if (nh_.hasParam("max_size")) { nh_.getParam("max_size", config_.max_size); }
+    if (nh_.hasParam("min_size")) { nh_.getParam("min_size", config_.min_size); }
+    if (nh_.hasParam("scale_factor")) { nh_.getParam("scale_factor", config_.scale_factor); }
+    if (nh_.hasParam("min_neighbors")) { nh_.getParam("min_neighbors", config_.min_neighbors); }
+    if (nh_.hasParam("trigger_width")) { nh_.getParam("trigger_width", config_.trigger_width); }
+    server_.updateConfig(config_);
+
+    // Subscribe to camera
+    if (!nh_.getParam("camera_topic", cam_topic))
+    {
+        ROS_ERROR_STREAM("[FATAL] Sign detection: param 'camera_topic' not defined");
+        exit(0);
+    }
+
+    if (!nh_.getParam("cascade_path", cascade_path))
+    {
+        ROS_ERROR_STREAM("[FATAL] Sign detection: param 'camera_topic' not defined");
+        exit(0);
+
+        //Load the cascades
+        if (!cascade_.load(cascade_path)) {
+            ROS_ERROR_STREAM("[FATAL] Sign detection: error loading cascade_ " << cascade_path);
+            exit(0);
+        }
+    }
+
+    image_sub_ = it_.subscribe(cam_topic, 1, &SignDetection::imageCb, this);
 
     sign_visible_pub_ = nh_.advertise<std_msgs::UInt8>("stop_sign", 100);
     size_pub_ = nh_.advertise<std_msgs::UInt32>("sign_size", 100);
@@ -207,12 +212,44 @@ void SignDetection::imageCb(const sensor_msgs::ImageConstPtr& msg)
     size_pub_.publish(size_msg);
 }
 
+bool SignDetection::hasSub(){
+    return sign_visible_pub_.getNumSubscribers();
+}
+
+bool SignDetection::isEnabled(){
+    return enabled_;
+}
+
+void SignDetection::startup(){
+    image_sub_ = it_.subscribe(cam_topic, 1, &SignDetection::imageCb, this);
+    enabled_ = false;
+}
+
+void SignDetection::shutdown(){
+    image_sub_ = image_transport::Subscriber();
+    enabled_ =  false;
+}
+
 
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "sign_detection");
-    SignDetection sd;
+    ros::Rate r(10); 
+    SignDetection stop;
 
-    ros::spin();
+    while (ros::ok()){
+        if (stop.hasSub()){
+            if (!stop.isEnabled()){
+                stop.startup();
+            }
+        } else {
+            if (stop.isEnabled()){
+                stop.shutdown();
+            }
+        }
+        ros::spinOnce();
+        r.sleep();
+    }
+
     return 0;
 }
