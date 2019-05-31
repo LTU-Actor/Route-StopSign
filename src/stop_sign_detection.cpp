@@ -233,9 +233,9 @@ void SignDetection::shutdown(){
 
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "sign_detection");
-    ros::Rate r(10); 
+    ros::init(argc, argv, "stop_sign_detection");
     SignDetection stop;
+    ros::Rate r(10); 
 
     while (ros::ok()){
         if (stop.hasSub()){
