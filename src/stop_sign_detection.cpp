@@ -7,7 +7,7 @@
 #include <sensor_msgs/image_encodings.h>
 
 #include <dynamic_reconfigure/server.h>
-#include <sign_detection/StopSignConfig.h>
+#include <ltu_actor_route_sign_detection/StopSignConfig.h>
 
 #include <opencv2/objdetect/objdetect.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -33,7 +33,7 @@ public:
 private:
     // Callbacks
     void imageCb(const sensor_msgs::ImageConstPtr& msg);
-    void configCB(sign_detection::StopSignConfig &config, uint32_t level);
+    void configCB(ltu_actor_route_sign_detection::StopSignConfig &config, uint32_t level);
 
     // Run sign detection
     void detectSign(cv::Mat& frame);
@@ -46,8 +46,8 @@ private:
     ros::Publisher size_pub_;
 
     // Dynamic reconfigure server
-    dynamic_reconfigure::Server<sign_detection::StopSignConfig> server_;
-    sign_detection::StopSignConfig config_;
+    dynamic_reconfigure::Server<ltu_actor_route_sign_detection::StopSignConfig> server_;
+    ltu_actor_route_sign_detection::StopSignConfig config_;
 
     uint8_t sign_visible_; // uint8_t used as boolean; 1 = sign, 0 = no sign
 
@@ -106,7 +106,7 @@ SignDetection::SignDetection() : nh_("~"), it_(nh_)
     sign_visible_ = 0;
 }
 
-void SignDetection::configCB(sign_detection::StopSignConfig &config, uint32_t level)
+void SignDetection::configCB(ltu_actor_route_sign_detection::StopSignConfig &config, uint32_t level)
 {
     config_ = config;
 }
@@ -130,7 +130,7 @@ void SignDetection::detectSign( cv::Mat& frame )
         cv::Size(config_.max_size, config_.max_size)    // Max Size (160)
     );
 
-    int sign_max_width_ = 0;
+    sign_max_width_ = 0;
 
     // Find the largest sign
     // Draw circles on all signs
@@ -213,7 +213,7 @@ void SignDetection::imageCb(const sensor_msgs::ImageConstPtr& msg)
 }
 
 bool SignDetection::hasSub(){
-    return sign_visible_pub_.getNumSubscribers();
+    return (sign_visible_pub_.getNumSubscribers() || size_pub_.getNumSubscribers());
 }
 
 bool SignDetection::isEnabled(){

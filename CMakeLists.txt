@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(sign_detection)
+project(ltu_actor_route_sign_detection)
 
 ## Add support for C++11, supported in ROS Kinetic and newer
 add_definitions(-std=c++11)
@@ -41,7 +41,7 @@ generate_dynamic_reconfigure_options(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES sign_detection
+#  LIBRARIES ltu_actor_route_sign_detection
 #  CATKIN_DEPENDS roscpp
    CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib

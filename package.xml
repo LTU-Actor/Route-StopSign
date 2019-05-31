@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>sign_detection</name>
+  <name>ltu_actor_route_sign_detection</name>
   <version>0.0.0</version>
   <description>The sign_detection package</description>
 

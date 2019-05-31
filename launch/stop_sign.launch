@@ -2,7 +2,7 @@
 
     <include file="$(find simple_camera_publisher)/launch/example.launch" />
 
-    <node name="stop_sign_detection" pkg="sign_detection" type="stop_sign_detection">
+    <node name="stop_sign_detection" pkg="ltu_actor_route_sign_detection" type="ltu_actor_route_sign_detection">
         <!-- Name of camera topic this node subscribes to -->
         <param name="camera_topic" type="string" value="/my_camera/cam_pub/image_raw" />
         <!-- Classifier to load and run detections on -->
