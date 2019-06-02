@@ -89,12 +89,12 @@ SignDetection::SignDetection() : nh_("~"), it_(nh_)
     {
         ROS_ERROR_STREAM("[FATAL] Sign detection: param 'camera_topic' not defined");
         exit(0);
+    }
 
-        //Load the cascades
-        if (!cascade_.load(cascade_path)) {
-            ROS_ERROR_STREAM("[FATAL] Sign detection: error loading cascade_ " << cascade_path);
-            exit(0);
-        }
+    //Load the cascades
+    if (!cascade_.load(cascade_path)) {
+        ROS_ERROR_STREAM("[FATAL] Sign detection: error loading cascade_ " << cascade_path);
+        exit(0);
     }
 
     image_sub_ = it_.subscribe(cam_topic, 1, &SignDetection::imageCb, this);
