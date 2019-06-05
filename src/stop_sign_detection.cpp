@@ -72,6 +72,13 @@ SignDetection::SignDetection() : nh_("~"), it_(nh_)
     if (nh_.hasParam("scale_factor")) { nh_.getParam("scale_factor", config_.scale_factor); }
     if (nh_.hasParam("min_neighbors")) { nh_.getParam("min_neighbors", config_.min_neighbors); }
     if (nh_.hasParam("trigger_width")) { nh_.getParam("trigger_width", config_.trigger_width); }
+    if (nh_.hasParam("red_mask")) { nh_.getParam("red_mask", config_.red_mask); }
+    if (nh_.hasParam("hue_lower")) { nh_.getParam("hue_lower", config_.hue_lower); }
+    if (nh_.hasParam("saturation_lower")) { nh_.getParam("saturation_lower", config_.saturation_lower); }
+    if (nh_.hasParam("value_lower")) { nh_.getParam("value_lower", config_.value_lower); }
+    if (nh_.hasParam("hue_upper")) { nh_.getParam("hue_upper", config_.hue_upper); }
+    if (nh_.hasParam("saturation_upper")) { nh_.getParam("saturation_upper", config_.saturation_upper); }
+    if (nh_.hasParam("value_upper")) { nh_.getParam("value_upper", config_.value_upper); }
     server_.updateConfig(config_);
 
     // Subscribe to camera
@@ -119,8 +126,8 @@ void SignDetection::applyRedMask(const cv::Mat &in, cv::Mat &out)
     // Threshold the HSV image, keep only the red pixels
     cv::Mat upper_red_hue_range;
     cv::inRange(hsv_image,
-            cv::Scalar(160, 65, 50),
-            cv::Scalar(180, 255, 255),
+            cv::Scalar(config_.hue_lower, config_.saturation_lower, config_.value_lower),
+            cv::Scalar(config_.hue_upper, config_.saturation_upper, config_.value_upper),
             upper_red_hue_range);
 
     cv::Mat dilated;
@@ -219,7 +226,7 @@ void SignDetection::imageCb(const sensor_msgs::ImageConstPtr& msg)
     cv::resize(cv_ptr->image, resized, cv::Size(), 0.5, 0.5, cv::INTER_AREA);
 
     // Run detection
-    applyRedMask(resized, resized);
+    if(config_.red_mask){ applyRedMask(resized, resized); }
     detectSign(resized);
 
     // Publish image with annotations

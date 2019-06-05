@@ -1,12 +1,20 @@
 <launch>
-
-    <include file="$(find simple_camera_publisher)/launch/example.launch" />
-
     <node name="stop_sign_detection" pkg="ltu_actor_route_sign_detection" type="stop_sign_detection">
         <!-- Name of camera topic this node subscribes to -->
         <param name="camera_topic" type="string" value="/my_camera/cam_pub/image_raw" />
         <!-- Classifier to load and run detections on -->
         <param name="cascade_path" type="string" value="$(find ltu_actor_route_sign_detection)/classifiers/stop_sign.xml" />
+        <param name="max_size" type="int" value="160" />
+        <param name="min_size" type="int" value="20" />
+        <param name="scale_factor" type="double" value="1.1187" />
+        <param name="min_neighbors" type="int" value="9" />
+        <param name="trigger_width" type="int" value="28" />
+        <param name="red_mask" type="bool" value="true" />
+        <param name="hue_lower" type="int" value="160" />
+        <param name="saturation_lower" type="int" value="65" />
+        <param name="value_lower" type="int" value="50" />
+        <param name="hue_upper" type="int" value="180" />
+        <param name="saturation_upper" type="int" value="255" />
+        <param name="value_upper" type="int" value="255" />
     </node>
-
 </launch>
