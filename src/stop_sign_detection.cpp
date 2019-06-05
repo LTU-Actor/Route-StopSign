@@ -37,6 +37,7 @@ private:
 
     // Run sign detection
     void detectSign(cv::Mat& frame);
+    void applyRedMask(const cv::Mat &in, cv::Mat &out);
 
     // ROS Objects
     ros::NodeHandle nh_;
@@ -50,15 +51,10 @@ private:
     ltu_actor_route_sign_detection::StopSignConfig config_;
 
     uint8_t sign_visible_; // uint8_t used as boolean; 1 = sign, 0 = no sign
-
     int sign_max_width_; // Largest sign seen in last frame
-
     image_transport::Publisher debug_image_pub_;
-
     static constexpr int consecutive_frames_trigger_ = 2;
-
     cv::CascadeClassifier cascade_;
-
     bool enabled_ = false;
 
     std::string cam_topic;
@@ -97,7 +93,7 @@ SignDetection::SignDetection() : nh_("~"), it_(nh_)
         exit(0);
     }
 
-    image_sub_ = it_.subscribe(cam_topic, 1, &SignDetection::imageCb, this);
+    //image_sub_ = it_.subscribe(cam_topic, 1, &SignDetection::imageCb, this);
 
     sign_visible_pub_ = nh_.advertise<std_msgs::UInt8>("stop_sign", 100);
     size_pub_ = nh_.advertise<std_msgs::UInt32>("sign_size", 100);
@@ -109,6 +105,36 @@ SignDetection::SignDetection() : nh_("~"), it_(nh_)
 void SignDetection::configCB(ltu_actor_route_sign_detection::StopSignConfig &config, uint32_t level)
 {
     config_ = config;
+}
+
+void SignDetection::applyRedMask(const cv::Mat &in, cv::Mat &out)
+{
+    // Convert input image to HSV
+    cv::Mat hsv_image;
+    cv::cvtColor(in, hsv_image, cv::COLOR_BGR2HSV);
+
+    std::vector<cv::Mat> channels(3);
+    cv::split(in, channels);
+
+    // Threshold the HSV image, keep only the red pixels
+    cv::Mat upper_red_hue_range;
+    cv::inRange(hsv_image,
+            cv::Scalar(160, 65, 50),
+            cv::Scalar(180, 255, 255),
+            upper_red_hue_range);
+
+    cv::Mat dilated;
+    cv::Mat dilate_element =\
+                cv::getStructuringElement( cv::MORPH_ELLIPSE,
+                                cv::Size(2*10 + 1, 2*10+1),
+                                cv::Point(10, 10));
+
+    cv::dilate(upper_red_hue_range, dilated, dilate_element);
+
+    channels[0] &= dilated;
+    channels[1] &= dilated;
+    channels[2] &= dilated;
+    cv::merge(channels, out);
 }
 
 void SignDetection::detectSign( cv::Mat& frame )
@@ -193,6 +219,7 @@ void SignDetection::imageCb(const sensor_msgs::ImageConstPtr& msg)
     cv::resize(cv_ptr->image, resized, cv::Size(), 0.5, 0.5, cv::INTER_AREA);
 
     // Run detection
+    applyRedMask(resized, resized);
     detectSign(resized);
 
     // Publish image with annotations
@@ -213,7 +240,7 @@ void SignDetection::imageCb(const sensor_msgs::ImageConstPtr& msg)
 }
 
 bool SignDetection::hasSub(){
-    return (sign_visible_pub_.getNumSubscribers() || size_pub_.getNumSubscribers());
+    return (sign_visible_pub_.getNumSubscribers() || size_pub_.getNumSubscribers() || debug_image_pub_.getNumSubscribers());
 }
 
 bool SignDetection::isEnabled(){
@@ -222,7 +249,7 @@ bool SignDetection::isEnabled(){
 
 void SignDetection::startup(){
     image_sub_ = it_.subscribe(cam_topic, 1, &SignDetection::imageCb, this);
-    enabled_ = false;
+    enabled_ = true;
 }
 
 void SignDetection::shutdown(){
