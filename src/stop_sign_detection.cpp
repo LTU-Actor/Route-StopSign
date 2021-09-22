@@ -158,7 +158,7 @@ void SignDetection::detectSign( cv::Mat& frame )
         signs,  // Output bounds
         config_.scale_factor,   // Scale factor (1.05)
         config_.min_neighbors,   // Min neighbors (7)
-        0|CV_HAAR_SCALE_IMAGE,  // Flags
+        0|cv::CASCADE_SCALE_IMAGE,  // Flags
         cv::Size(config_.min_size, config_.min_size),    // Min Size (70)
         cv::Size(config_.max_size, config_.max_size)    // Max Size (160)
     );
