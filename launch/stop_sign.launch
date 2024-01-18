@@ -1,7 +1,7 @@
 <launch>
     <node name="stop_sign_detection" pkg="ltu_actor_route_sign_detection" type="stop_sign_detection">
         <!-- Name of camera topic this node subscribes to -->
-        <param name="camera_topic" type="string" value="/my_camera/cam_pub/image_raw" />
+        <param name="camera_topic" type="string" value="/cam_pub/image_raw" />
         <!-- Classifier to load and run detections on -->
         <param name="cascade_path" type="string" value="$(find ltu_actor_route_sign_detection)/classifiers/stop_sign.xml" />
         <param name="max_size" type="int" value="160" />
